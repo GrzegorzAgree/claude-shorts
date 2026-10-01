@@ -66,7 +66,7 @@ def detect_faces(frame_paths):
     import cv2
     import numpy as np
 
-    mp_face = mp.solutions.face_detection
+    import mp_face_compat as mp_face
     detector = mp_face.FaceDetection(
         model_selection=1,  # Full range model (works for far faces too)
         min_detection_confidence=0.5

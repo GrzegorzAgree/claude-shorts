@@ -10,31 +10,10 @@ echo ""
 
 # --- Python Virtual Environment ---
 
-# Check if shared venv exists (from claude-video)
-VENV=""
+# Reuse the shared venv from claude-video if it exists
 if [ -d "$HOME/.video-skill" ]; then
     VENV="$HOME/.video-skill"
     echo "[Python] Found shared venv at ~/.video-skill"
-
-    # Check if faster-whisper is already installed
-    if "$VENV/bin/python3" -c "import faster_whisper" 2>/dev/null; then
-        echo "[Python] faster-whisper already installed — skipping Python setup"
-    else
-        echo "[Python] Installing faster-whisper into shared venv..."
-        "$VENV/bin/pip" install --quiet faster-whisper
-    fi
-
-    # Check mediapipe
-    if ! "$VENV/bin/python3" -c "import mediapipe" 2>/dev/null; then
-        echo "[Python] Installing mediapipe..."
-        "$VENV/bin/pip" install --quiet mediapipe
-    fi
-
-    # Check opencv
-    if ! "$VENV/bin/python3" -c "import cv2" 2>/dev/null; then
-        echo "[Python] Installing opencv-python..."
-        "$VENV/bin/pip" install --quiet opencv-python
-    fi
 else
     VENV="$HOME/.shorts-skill"
     if [ -d "$VENV" ]; then
@@ -43,24 +22,20 @@ else
         echo "[Python] Creating venv at ~/.shorts-skill..."
         python3 -m venv "$VENV"
     fi
-
-    echo "[Python] Installing dependencies..."
     "$VENV/bin/pip" install --quiet --upgrade pip
-
-    # Check for NVIDIA GPU to decide PyTorch variant
-    if command -v nvidia-smi &>/dev/null; then
-        echo "[Python] NVIDIA GPU detected — installing PyTorch with CUDA..."
-        "$VENV/bin/pip" install --quiet torch torchvision torchaudio \
-            --index-url https://download.pytorch.org/whl/cu128
-    else
-        echo "[Python] No NVIDIA GPU — installing CPU-only PyTorch..."
-        "$VENV/bin/pip" install --quiet torch torchvision torchaudio \
-            --index-url https://download.pytorch.org/whl/cpu
-    fi
-
-    echo "[Python] Installing faster-whisper, mediapipe, numpy, opencv-python..."
-    "$VENV/bin/pip" install --quiet faster-whisper mediapipe numpy opencv-python
 fi
+
+# PyTorch is only used to detect CUDA (transcribe.py falls back to CPU without it)
+if command -v nvidia-smi &>/dev/null; then
+    echo "[Python] NVIDIA GPU detected — installing PyTorch with CUDA..."
+    "$VENV/bin/pip" install --quiet torch torchvision torchaudio \
+        --index-url https://download.pytorch.org/whl/cu128
+else
+    echo "[Python] No NVIDIA GPU — skipping PyTorch (CPU transcription)"
+fi
+
+echo "[Python] Installing dependencies from requirements.txt..."
+"$VENV/bin/pip" install --quiet -r "$SCRIPT_DIR/requirements.txt"
 
 echo "[Python] Venv ready: $VENV"
 echo ""

@@ -157,7 +157,7 @@ for input_file in "$INPUT_DIR"/short_*.mp4; do
 done
 
 # Build JSON output
-RESULTS_JSON=$(printf '%s\n' "${RESULTS[@]}" | paste -sd ',' | sed 's/^/[/' | sed 's/$/]/')
+RESULTS_JSON=$(printf '%s\n' "${RESULTS[@]}" | paste -sd ',' - | sed 's/^/[/' | sed 's/$/]/')
 
 cat <<EOF
 {

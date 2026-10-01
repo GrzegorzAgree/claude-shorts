@@ -62,7 +62,7 @@ def compute_face_track(clip_path, src_w, src_h, num_samples=5):
 
     _, _, _, duration = get_video_info(clip_path)
 
-    mp_face = mp.solutions.face_detection
+    import mp_face_compat as mp_face
     detector = mp_face.FaceDetection(model_selection=1, min_detection_confidence=0.5)
 
     face_positions = []
