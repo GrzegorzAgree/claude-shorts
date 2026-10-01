@@ -7,6 +7,7 @@ with OpenCV YuNet as a fallback for far faces the short-range model misses.
 """
 
 import os
+import sys
 import urllib.request
 from types import SimpleNamespace
 
@@ -66,6 +67,13 @@ class _YuNet:
             out.append(_box(x / w, y / h, min(fw, w - x) / w, min(fh, h - y) / h))
         return out
 
+    def process(self, rgb):
+        detections = self.detect(rgb)
+        return SimpleNamespace(detections=detections or None)
+
+    def close(self):
+        pass
+
 
 class _TasksFaceDetection:
     def __init__(self, min_detection_confidence=0.5):
@@ -99,6 +107,11 @@ class _TasksFaceDetection:
 
 
 def FaceDetection(model_selection=1, min_detection_confidence=0.5):
+    # MediaPipe Tasks can abort the entire process while initializing its Metal
+    # graph on macOS, so a Python exception handler cannot provide a fallback.
+    if sys.platform == "darwin":
+        return _YuNet(min_detection_confidence)
+
     import mediapipe as mp
     if hasattr(mp, "solutions"):
         return mp.solutions.face_detection.FaceDetection(
